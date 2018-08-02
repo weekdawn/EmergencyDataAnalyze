@@ -112,22 +112,22 @@ class EmergencyAnalyze:
         time_num = time_df.groupby(0)
         #总共14371组
         time = time_num.size()
-        time = time[0:2000]
+        #取前2000条数据进行分析
+        # time = time[0:2000]
         #横坐标  持续时间（分钟
-        x = time.index.seconds / 60.0
+        x = time.index.seconds# / 60.0
         y = time.values / self.total_emg_df.shape[0]
         # print(x)
-        print(time_num.max())
+        print(time.max())
 
-        # print(type(x))
-        # print(type(y))
-        plt.xlim(0, 50)
+        plt.xlim(0, 60)
+        plt.ylim(0,0.1)
         plot1 = plt.plot(x,y)
-        plt.setp(plot1, color='r', linewidth=2.0)
+        plt.setp(plot1, color='k')#, linewidth=2.0
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
         plt.title("告警持续时间分布")
-        plt.xlabel("告警持续时间(分钟)")
-        plt.ylabel("告警数占总告警数的比例(%)")
+        plt.xlabel("告警持续时间(秒)")
+        plt.ylabel("告警数占总告警数的比例(百分之)")
         plt.show()
 
         # plot1 = pl.plot(x, y)
