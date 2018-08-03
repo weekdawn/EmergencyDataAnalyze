@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import pylab as pl
 
 
 class EmergencyAnalyze:
@@ -9,7 +8,7 @@ class EmergencyAnalyze:
         self.csv_file = "test_tb_ato_event_final_his.csv"
         self.csv_data = pd.read_csv(self.csv_file, low_memory = False)
         self.total_emg_df = pd.DataFrame(self.csv_data)#, columns = ['UNIT_ID','KPI_ID', 'GENERANT_TIME','CLEAR_TIME ']
-        pd.set_option('display.max_columns', None)#print显示所有列
+        pd.set_option('display.max_columns', None)#让print显示所有列
         self.origin_meg = [["10-11-37-20:BILLING_DATA-db03","PM-10-11-037-15"],
                       ["10-10-24-14:ismp01_96_171-//","PM-00-01-004-03"],
                       ["10.243.34.32","PM-00-01-004-03"],
@@ -25,16 +24,14 @@ class EmergencyAnalyze:
 
     #1&2 计算总告警和告警元数量
     def emergencyNum(self):
-        unit_num_norepeat_df = pd.DataFrame(self.csv_data, columns=['UNIT_ID', 'KPI_ID','GENERANT_TIME','CLEAR_TIME'])
-        unit_num_norepeat_df = unit_num_norepeat_df.drop_duplicates(subset=['UNIT_ID', 'KPI_ID'], keep='first')
+        unit_num_df = pd.DataFrame(self.csv_data, columns=['UNIT_ID', 'KPI_ID','GENERANT_TIME','CLEAR_TIME'])
+        unit_num_df = self.clearData(unit_num_df).dropna(how="all")
+        unit_num_norepeat_df = unit_num_df.drop_duplicates(subset=['UNIT_ID', 'KPI_ID'], keep='first')
         #去掉UNIT_ID和KPI_ID列中重复的行，并保留第一次出现的行
         #补充：
         # 当keep=False时，就是去掉所有的重复行
         # 当keep=‘first'时，就是保留第一次出现的重复行
         # 当keep='last'时就是保留最后一次出现的重复行。（注意，这里的参数是字符串）
-
-        unit_num_norepeat_df = self.clearData(unit_num_norepeat_df)
-
 
         print("1.总告警数量：")
         print (self.total_emg_df.shape[0])
@@ -51,14 +48,22 @@ class EmergencyAnalyze:
 
     #4 所有告警元的告警量分布
     def emergencyDistrbution(self):
-        pass
-        # emg_df = self.total_emg_df.groupby("UNIT_ID")
-        # print(emg_df.size().values)
+        emg_df = self.clearData(self.total_emg_df)
+        emg_df = emg_df[["UNIT_ID","KPI_ID"]].dropna(how="all")
+        emg_df = emg_df.groupby(["UNIT_ID","KPI_ID"])
+
+        print(emg_df.size().count())
+        x = np.arange(1,len(emg_df.size())+1)
+        y = emg_df.size()
+        plt.plot(x,y)
+        plt.show()
+
 
 
     #5 对那五个告警根源，分别统计各个告警元的告警量 & 8 对那五个告警根源，统计每一个的平均持续时间
     def countEmergency(self):
-        count_df = pd.DataFrame(self.csv_data, columns=['UNIT_ID','KPI_ID','GENERANT_TIME','CLEAR_TIME'])
+        count_df = self.total_emg_df[['UNIT_ID','KPI_ID','GENERANT_TIME','CLEAR_TIME']]
+        count_df = self.clearData(count_df)
 
         #告警元由两个id决定
 
@@ -81,7 +86,8 @@ class EmergencyAnalyze:
 
     #6 所有告警的平均持续时间
     def meanEmergency(self):
-        mean_time_df = pd.DataFrame(self.csv_data, columns=['GENERANT_TIME', 'CLEAR_TIME'])
+        mean_time_df = self.total_emg_df[['GENERANT_TIME', 'CLEAR_TIME']]
+        mean_time_df = self.clearData(mean_time_df)
         mean_time_df = mean_time_df.dropna(axis=0,how='any')
         # 删除表中全部为NaN的行
         # 删除行，使用参数axis = 0，删除列的参数axis = 1
@@ -98,12 +104,6 @@ class EmergencyAnalyze:
     #7 告警持续时间分布（图形）
     def timeDistribution(self):
         time_df = self.meanEmergency()
-        #超过5分钟的告警数
-        # temp_time = pd.to_datetime('00:30:00', format='%H:%M:%S')
-        # temp_time2 = pd.to_datetime('00:00:00', format='%H:%M:%S')
-        # sub_time = temp_time - temp_time2
-        # over_five_time = time_df[pd.to_datetime(time_df[0]) > sub_time]
-        #
 
         time_num = time_df.groupby(0)
         #总共14371组
@@ -125,29 +125,13 @@ class EmergencyAnalyze:
         plt.ylabel("告警数占总告警数的比例")
         plt.show()
 
-        # plot1 = pl.plot(x, y)
-        #
-        # pl.title("告警持续时间分布")  # give plot a title
-        # pl.xlabel("告警持续时间")  # make axis labels
-        # pl.ylabel("告警数量")
-        #
-        # # pl.xlim(0.0, 9.0)  # set axis limits
-        # # pl.ylim(0.0, 30.)
-        #
-        # pl.legend(plot1,  numpoints = 1)  # make legend
-        # pl.show()  # show the plot on the screen
-
-
 if __name__ == '__main__':
     e = EmergencyAnalyze()
-
-    e.emergencyDistrbution()
-
     e.emergencyNum()
     e.time()
     e.countEmergency()
     print("\n6.所有告警的平均持续时间：")
     print(e.meanEmergency().mean())
-    # e.timeDistribution()
     e.emergencyDistrbution()
+    e.timeDistribution()
 
