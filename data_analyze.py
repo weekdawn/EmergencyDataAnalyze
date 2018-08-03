@@ -52,26 +52,22 @@ class EmergencyAnalyze:
     #4 所有告警元的告警量分布
     def emergencyDistrbution(self):
         pass
-        # emg_df = pd.DataFrame(self.csv_data, columns = ['UNIT_ID'])#,'CLEAR_TIME'
-        # emg_norepeat_df = emg_df.drop_duplicates(subset=['UNIT_ID'], keep='first')
-        # emg_norepeat_df = emg_norepeat_df.groupby("UNIT_ID")
-        # # emg_norepeat_df.drop(emg_norepeat_df.index[0], inplace=True)
-        # for i in emg_norepeat_df:
-        #     count = emg_df.groupby(str(i))
-        #     print(count)
+        # emg_df = self.total_emg_df.groupby("UNIT_ID")
+        # print(emg_df.size().values)
+
 
     #5 对那五个告警根源，分别统计各个告警元的告警量 & 8 对那五个告警根源，统计每一个的平均持续时间
     def countEmergency(self):
-        count_df = pd.DataFrame(self.csv_data, columns=['UNIT_ID','GENERANT_TIME','CLEAR_TIME'])
+        count_df = pd.DataFrame(self.csv_data, columns=['UNIT_ID','KPI_ID','GENERANT_TIME','CLEAR_TIME'])
 
         #告警元由两个id决定
 
         #求每个告警元的告警量
-        count1 = count_df.query('UNIT_ID == "10-11-37-20:BILLING_DATA-db03"')
-        count2 = count_df.query('UNIT_ID == "10-10-24-14:ismp01_96_171-//"')
-        count3 = count_df.query('UNIT_ID == "10-10-24-14:hfwxapp01_34_32-/apacheserver"')
-        count4 = count_df.query('UNIT_ID == "10-10-24-12:HN2_104_H02_07Rs-memory"')
-        count5 = count_df.query('UNIT_ID == "10-10-24-12:HN2_104_H01_09Rs-memory"')
+        count1 = count_df.query('UNIT_ID == "10-11-37-20:BILLING_DATA-db03"').query('KPI_ID == "PM-10-11-037-15"')
+        count2 = count_df.query('UNIT_ID == "10-10-24-14:ismp01_96_171-//"').query('KPI_ID == "PM-00-01-004-03"')
+        count3 = count_df.query('UNIT_ID == "10-10-24-14:hfwxapp01_34_32-/apacheserver"').query('KPI_ID == "PM-00-01-004-03"')
+        count4 = count_df.query('UNIT_ID == "10-10-24-12:HN2_104_H02_07Rs-memory"').query('KPI_ID == "PM-00-01-002-01"')
+        count5 = count_df.query('UNIT_ID == "10-10-24-12:HN2_104_H01_09Rs-memory"').query('KPI_ID == "PM-00-01-002-02"')
         print("\n5.\n1号告警元有%s个\n2号告警元有%s个\n3号告警元有%s个\n4号告警元有%s个"
               "\n5号告警元有%s个\n"%(count1.shape[0],count2.shape[0],count3.shape[0],count4.shape[0],count5.shape[0]))
 
@@ -112,18 +108,13 @@ class EmergencyAnalyze:
         time_num = time_df.groupby(0)
         #总共14371组
         time = time_num.size()
-        #取前2000条数据进行分析
-        # time = time[0:2000]
         #横坐标  持续时间（分钟
         x = time.index.seconds / 60
         y = time.values / self.total_emg_df.shape[0]
-        print("time:")
-        print(time)
-        print("x:")
-        print(x)
-        print("y:")
-        print(y)
-        plt.xlim(0, 500)
+
+        #前5分钟的数据
+        plt.xlim(0, 5)
+        #占比
         plt.ylim(0,0.1)
         plot1 = plt.plot(x,y)
         plt.setp(plot1, color='r')#, linewidth=2.0
@@ -157,5 +148,6 @@ if __name__ == '__main__':
     e.countEmergency()
     print("\n6.所有告警的平均持续时间：")
     print(e.meanEmergency().mean())
-    e.timeDistribution()
+    # e.timeDistribution()
+    e.emergencyDistrbution()
 
